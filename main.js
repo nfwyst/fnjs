@@ -73,8 +73,13 @@ var fnjs = (function() {
      */
     p.compose = function() {
       var args = Array.from(arguments);
+      var reversed = false;
       return function (arg) {
-        var fns = args.reverse();
+        var fns = args;
+        if (!reversed) {
+          fns = fns.reverse();
+          reversed = true;
+        }
         if (args.length > 1) {
           return fns.slice(1).reduce((cur, next) => {
             return () => {
@@ -295,7 +300,8 @@ var {
   curry,
   prop,
   map,
-  concat
+  concat,
+  trace
 } = fnjs;
 
 console.log(
@@ -316,8 +322,15 @@ var getAge = curry(function (now, user) {
     return Container.of(now.diff(birthdate, 'years'));
 });
 
-var exec = compose(concat('if you are right, you will be '), add(1));
+var exec = compose(concat('if you are right, you will be '), trace('加1后的结果'), add(1));
 
 var ap = compose(map(console.log), map(exec), getAge(moment()));
 
-console.log('======\n', ap({ birthdate: '2009-01-23' }))
+console.log('======\n', ap({ birthdate: '2009-01-23' }));
+
+
+var ap1 = compose(getAge(moment()));
+
+console.log(ap1({birthdate: 'error'}).map(console.log)); // should not work
+
+ap1({birthdate: '2000-01-01'}).map(trace('获取年龄的结果')).map(exec).map(console.log);
