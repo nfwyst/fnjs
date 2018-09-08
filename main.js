@@ -91,6 +91,24 @@ var fnjs = (function() {
       }
     }
 
+    // a -> b -> a | b
+    p.add = p.curry(function (num, a) {
+      if(a.map) {
+        return a.map(v => v + num);
+      } else {
+        return a + num;
+      }
+    });
+
+    // a -> b -> a | b
+    p.concat = p.curry(function(a, b) {
+      if (b.map) {
+        return b.map(v => a.concat(v));
+      } else {
+        return a.concat(b);
+      }
+    });
+
     // String -> Object -> any
     p.prop = p.curry(function (property, obj) {
       return obj[property];
@@ -268,7 +286,17 @@ var fnjs = (function() {
 
 
 // pure function
-var { moment, Container, Message, curry, prop } = fnjs;
+var {
+  add,
+  compose,
+  moment,
+  Container,
+  Message,
+  curry,
+  prop,
+  map,
+  concat
+} = fnjs;
 
 console.log(
   fnjs.Container.of({
@@ -288,4 +316,8 @@ var getAge = curry(function (now, user) {
     return Container.of(now.diff(birthdate, 'years'));
 });
 
-console.log(getAge(moment(), {birthdate: '2010-10-21'}));
+var exec = compose(concat('if you are right, you will be '), add(1));
+
+var ap = compose(map(console.log), map(exec), getAge(moment()));
+
+console.log('======\n', ap({ birthdate: '2009-01-23' }))
