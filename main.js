@@ -52,6 +52,7 @@ var fnjs = (function() {
       var argList = [];
 
       return function(a) {
+        var self = this;
         if (!i) {
           pn = fnjs.getParaNum(f);
           argList = [];
@@ -60,13 +61,13 @@ var fnjs = (function() {
           pn -= arguments.length;
           argList = argList.concat(Array.from(arguments).slice(1));
         } else {
-          return f.apply(null, arguments);
+          return f.apply(self, arguments);
         }
         return p.curry(
           function() {
             argList = argList.concat(Array.from(arguments));
             argList.unshift(a);
-            var res = f.apply(null, argList);
+            var res = f.apply(self, argList);
             if (!i) {
               pn = fnjs.getParaNum(f);
               argList = [];
@@ -388,6 +389,30 @@ var fnjs = (function() {
         return this;
       };
     })((p.Message.prototype = p.Message.prototype || {}));
+
+    // basic event bus: a -> undefined
+    p.bus = function() {
+      this.maps = {};
+    };
+    // basic event bus 实例方法
+    (function(bus) {
+      "use strict";
+      bus.on = p.curry(function(type, fn) {
+        this.maps[type]
+          ? this.maps[type].push(fn)
+          : ((this.maps[type] = []), this.maps[type].push(fn));
+      });
+      bus.emit = p.curry(function(type, data) {
+        console.log(this, type, data);
+        this.maps[type] && this.__emit(type, data);
+      });
+      bus.__emit = function(type, data) {
+        for (var i = 0; i < this.maps[type].length; i++) {
+          this.maps[type][i](data);
+        }
+      };
+    })((p.bus.prototype = p.bus.prototype || {}));
+
   })((fnjs.prototype = fnjs.prototype || {}));
 
   return new fnjs();
