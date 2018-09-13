@@ -144,9 +144,8 @@ var fnjs = (function() {
     p.getJSON = p.curry(function(cb, url) {
       var xhr = new XMLHttpRequest();
       xhr.open("get", url);
-      xhr.setRequestHeader("Content-Type", "json");
       xhr.onload = function(res) {
-        cb.call(res.target, res.target.responseText);
+        cb.call(res.target, JSON.parse(res.target.responseText));
       };
       xhr.send();
     });
@@ -155,6 +154,11 @@ var fnjs = (function() {
     p.setHtml = p.curry(function(ele, html) {
       ele.innerHTML = html;
       return ele;
+    });
+
+    // a -> (b -> c) -> d
+    p.pipeUrl = p.curry(function(url, fn) {
+      return fn(url);
     });
 
     // HTMLElement -> string -> HTMLElement
