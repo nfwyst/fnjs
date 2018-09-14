@@ -60,7 +60,7 @@ var fnjs = (function() {
           pn = n;
         }
         if (argList.length >= pn) {
-          return f.apply(self, argList);
+          argList = [];
         } else if (arguments.length < pn) {
           pn -= arguments.length;
           argList = argList.concat(Array.from(arguments).slice(1));
