@@ -48,7 +48,7 @@ var fnjs = (function() {
         return function(f) {
           return f;
         };
-      var pn = n && type(n) === "number" ? n : fnjs.getParaNum(f);
+      var pn = null;
       var argList = [];
 
       return function(a) {
@@ -56,8 +56,12 @@ var fnjs = (function() {
         if (!i) {
           pn = fnjs.getParaNum(f);
           argList = [];
+        } else {
+          pn = n;
         }
-        if (arguments.length < pn) {
+        if (argList.length >= pn) {
+          return f.apply(self, argList);
+        } else if (arguments.length < pn) {
           pn -= arguments.length;
           argList = argList.concat(Array.from(arguments).slice(1));
         } else {
