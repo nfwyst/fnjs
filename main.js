@@ -407,7 +407,6 @@ var fnjs = (function() {
           : ((this.maps[type] = []), this.maps[type].push(fn));
       });
       bus.emit = p.curry(function(type, data) {
-        console.log(this, type, data);
         this.maps[type] && this.__emit(type, data);
       });
       bus.__emit = function(type, data) {
