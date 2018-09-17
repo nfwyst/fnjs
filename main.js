@@ -405,10 +405,13 @@ var fnjs = (function() {
         this.maps[type]
           ? this.maps[type].push(fn)
           : ((this.maps[type] = []), this.maps[type].push(fn));
-      });
+      })
       bus.emit = p.curry(function(type, data) {
         this.maps[type] && this.__emit(type, data);
-      });
+      })
+      bus.off = function (type) {
+        this.maps[type] ? this.maps[type] = [] : null;
+      }
       bus.__emit = function(type, data) {
         for (var i = 0; i < this.maps[type].length; i++) {
           this.maps[type][i](data);
