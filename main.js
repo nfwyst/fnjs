@@ -272,6 +272,16 @@ var fnjs = (function() {
       this.__value = d ? d : null;
     };
 
+    // (any -> any) -> (any -> any) -> a
+    p.whenNull = p.curry(function(execute, forbiden, o) {
+      var isnull = true;
+      for (var i in o) {
+        isnull = false;
+        break;
+      }
+      return isnull ? execute.call(o) : forbiden.call(o);
+    });
+
     // a -> b
     p.Container.of = function(d) {
       return new p.Container(d);
