@@ -419,12 +419,43 @@ var fnjs = (function() {
       bus.emit = p.curry(function(type, data) {
         this.maps[type] && this.__emit(type, data);
       })
+      bus.all = function() {
+        var args = Array.from(arguments);
+        var eventTypes = args.slice(0, -1);
+        var fn = args.slice(-1)[0];
+        if(!eventTypes.length || !fn) return false;
+        fn.eventTypes = eventTypes;
+        fn.scope = {};
+        fn.bindTypes = [].concat(eventTypes);
+        for(var i = 0; i < eventTypes.length; i++) {
+          this.on(eventTypes[i], fn)
+        }
+      }
       bus.off = function (type) {
         this.maps[type] ? this.maps[type] = [] : null;
       }
       bus.__emit = function(type, data) {
         for (var i = 0; i < this.maps[type].length; i++) {
-          this.maps[type][i](data);
+          var fn = this.maps[type][i];
+          if(fn.eventTypes) {
+            var list = [];
+            if(fn.eventTypes.length && fn.eventTypes.indexOf(type) !== -1) {
+              fn.scope[type] = data;
+              fn.eventTypes.splice(fn.eventTypes.indexOf(type), 1);
+              if(fn.eventTypes.length)  continue;
+            } else if(fn.eventTypes.length && fn.eventTypes.indexOf(type) === -1) {
+              continue;
+            }
+            if(fn.bindTypes.indexOf(type) !== -1) {
+              fn.scope[type] = data;
+            }
+            for(var i = 0; i < fn.bindTypes.length; i++) {
+              list.push(fn.scope[fn.bindTypes[i]]);
+            }
+            fn.apply(null, list);
+          } else {
+            fn(data);
+          }
         }
       };
     })((p.bus.prototype = p.bus.prototype || {}));
@@ -504,3 +535,22 @@ var ress = ioObj
   .map(split(","));
 
 console.log(ress.unsafePerform());
+
+var bus = new fnjs.bus();
+
+bus.all('name', 'age', 'other', function(a, b, c) {
+  console.log(a, b, c);
+})
+
+setTimeout(function() {
+  bus.emit('name', 'jesime');
+}, 1000);
+setTimeout(function() {
+  bus.emit('age', 30);
+}, 2000);
+setTimeout(function() {
+  bus.emit('other', 'none');
+}, 3000);
+setTimeout(function() {
+  bus.emit('other', 'none should be null');
+}, 4000);
