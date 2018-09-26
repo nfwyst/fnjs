@@ -416,9 +416,9 @@ var fnjs = (function() {
           ? this.maps[type].push(fn)
           : ((this.maps[type] = []), this.maps[type].push(fn));
       })
-      bus.emit = p.curry(function(type, data) {
-        this.maps[type] && this.__emit(type, data);
-      })
+      bus.emit = function(type, data) {
+        this.maps[type] && this.__emit(type, data ? data : null);
+      }
       bus.all = function() {
         var args = Array.from(arguments);
         var eventTypes = args.slice(0, -1);
