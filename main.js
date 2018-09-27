@@ -408,6 +408,25 @@ var fnjs = (function() {
     p.bus = function() {
       this.maps = {};
     };
+
+    // (any -> any) -> b -> (any -> any)
+    p.throttle = function(f, context) {
+      var t = 350;
+      var l = new Date((new Date()).getTime() - t);
+      return function() {
+        var partial = null;
+        if ((l.getTime() + t) > (new Date()).getTime()) return false;
+        l = new Date();
+        partial = p.__ap(f);
+        return partial(context ? context : arguments);
+      };
+    }
+
+    // (any -> any) -> c -> any
+    p.__ap = p.curry(function(f, c) {
+        return f.apply(f, c);
+    });
+
     // basic event bus 实例方法
     (function(bus) {
       "use strict";
