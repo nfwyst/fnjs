@@ -411,7 +411,7 @@ var fnjs = (function() {
 
     // (any -> any) -> b -> (any -> any)
     p.throttle = function(f, context) {
-      var t = 350;
+      var t = 30;
       var l = new Date((new Date()).getTime() - t);
       return function() {
         var partial = null;
