@@ -424,8 +424,53 @@ var fnjs = (function() {
 
     // (any -> any) -> c -> any
     p.__ap = p.curry(function(f, c) {
-        return f.apply(f, c);
+      return f.apply(f, c);
     });
+
+    // string -> array
+    p.props = function(selector) {
+      var res = [];
+      for(var i in selector) {
+        res.push(i);
+      }
+      return res;
+    }
+
+    // string -> array
+    p.getEventLists = function (selector) {
+      var el = document.querySelector(selector);
+      return p.props(el).filter(item => /^on/.test(item)).map(item => {
+        if(typeof el[item] === 'function') {
+          return {
+            type: item.slice(2),
+            funcStr: el[item].toString(),
+            func: el[item]
+          }
+        }
+      })
+    }
+
+    // string -> undefined
+    p.print = function(selector) {
+      if(!selector) return false;
+      var mp = new Map();
+
+      var printContents = document.querySelector(selector).innerHTML;
+      var container = document.createElement('div');
+      container.innerHTML = printContents;
+
+      var originalContents = Array.from(document.body.children);
+      originalContents.forEach(function (item, index) {
+        mp.set(index, item.style.display);
+        item.style.display = 'none';
+      })
+      document.body.appendChild(container);
+      window.print();
+      document.body.removeChild(container);
+      originalContents.forEach(function (item, index) {
+        item.style.display = mp.get(index)
+      })
+    }
 
     // basic event bus 实例方法
     (function(bus) {
