@@ -1,4 +1,4 @@
-var fnjs = (function() {
+var fnjs = (function () {
   "use strict";
 
   // 构造函数
@@ -7,10 +7,10 @@ var fnjs = (function() {
   }
 
   // 静态私有方法
-  (function(f) {
+  (function (f) {
     "use strict";
     // 获取函数参数的个数
-    f.getParaNum = function(f) {
+    f.getParaNum = function (f) {
       return f
         .toString()
         .match(/\((.*)\)/)[1]
@@ -19,79 +19,38 @@ var fnjs = (function() {
   })(fnjs);
 
   // 实例方法
-  (function(p) {
+  (function (p) {
     "use strict";
     // 初始化命名空间
-    p.init = function() {
+    p.init = function () {
       this.name = "fnjs";
       this.version = "1.0.0";
     };
     // 判断输入的类型
-    p.type = function(entry) {
+    p.type = function (entry) {
       return Object.prototype.toString
         .call(entry)
-        .replace(/^\[\w+ (\w+)\]$/, function(_, r) {
+        .replace(/^\[\w+ (\w+)\]$/, function (_, r) {
           return r.toLowerCase();
         });
     };
 
     /**
-     * 将一个有多个参数的函数柯理化
-     * @param {Function} f 被柯理化的函数
-     * @param {Number} n 函数需要的参数
-     * @param {Boolean} i 当前递归的层级是否是子层级
-     * @returns Function
+     * 将一个函数柯理化
+     * @param {Function} fn 被柯理化的函数
      */
-    p.curry = function(f, n, i) {
-      var type = p.type;
-      if (type(f) !== "function")
-        return function(f) {
-          return f;
-        };
-      var pn = null;
-      var argList = [];
-
-      return function(a) {
-        var self = this;
-        if (!i) {
-          pn = fnjs.getParaNum(f);
-          argList = [];
-        } else {
-          pn = n;
-        }
-        if (argList.length >= pn) {
-          argList = [];
-        } else if (arguments.length < pn) {
-          pn -= arguments.length;
-          argList = argList.concat(Array.from(arguments).slice(1));
-        } else {
-          return f.apply(self, arguments);
-        }
-        return p.curry(
-          function() {
-            argList = argList.concat(Array.from(arguments));
-            argList.unshift(a);
-            var res = f.apply(self, argList);
-            if (!i) {
-              pn = fnjs.getParaNum(f);
-              argList = [];
-            }
-            return res;
-          },
-          pn,
-          true
-        );
-      };
-    };
+    p.curry = fn => function curryStack(...args) {
+      return args.length >= fn.length ? fn(...args) : (i) => curryStack(...[...args, a]);
+    }
     /**
      * 将多个函数组合起来
      * @param {Function} arguments
      * @returns Function
      */
-    p.compose = function() {
+    p.compose = function () {
       var args = Array.from(arguments);
       var reversed = false;
-      return function(arg) {
+      return function (arg) {
         var fns = args;
         if (!reversed) {
           fns = fns.reverse();
@@ -114,7 +73,7 @@ var fnjs = (function() {
     };
 
     // a -> b -> a | b
-    p.add = p.curry(function(num, a) {
+    p.add = p.curry(function (num, a) {
       if (a.map) {
         return a.map(v => v + num);
       } else {
@@ -123,7 +82,7 @@ var fnjs = (function() {
     });
 
     // a -> b -> a | b
-    p.concat = p.curry(function(a, b) {
+    p.concat = p.curry(function (a, b) {
       if (b.map) {
         return b.map(v => a.concat(v));
       } else {
@@ -132,12 +91,12 @@ var fnjs = (function() {
     });
 
     // String -> Object -> any
-    p.prop = p.curry(function(property, obj) {
+    p.prop = p.curry(function (property, obj) {
       return obj[property];
     });
 
     // Function -> Array | Functor -> Array | Functor
-    p.map = p.curry(function(fn, datas) {
+    p.map = p.curry(function (fn, datas) {
       if (datas.map) {
         return datas.map(fn);
       } else {
@@ -146,48 +105,48 @@ var fnjs = (function() {
     });
 
     // Function -> string -> undefined
-    p.getJSON = p.curry(function(cb, url) {
+    p.getJSON = p.curry(function (cb, url) {
       var xhr = new XMLHttpRequest();
       xhr.open("get", url);
-      xhr.onload = function(res) {
+      xhr.onload = function (res) {
         cb.call(res.target, JSON.parse(res.target.responseText));
       };
       xhr.send();
     });
 
     // HTMLElement -> string -> HTMLElement
-    p.setHtml = p.curry(function(ele, html) {
+    p.setHtml = p.curry(function (ele, html) {
       ele.innerHTML = html;
       return ele;
     });
 
     // a -> (b -> c) -> d
-    p.pipeUrl = p.curry(function(url, fn) {
+    p.pipeUrl = p.curry(function (url, fn) {
       return fn(url);
     });
 
     // HTMLElement -> string -> HTMLElement
-    p.appendHtml = p.curry(function(ele, html) {
+    p.appendHtml = p.curry(function (ele, html) {
       ele.insertAdjacentHTML("beforeend", html);
       return ele;
     });
 
     // string -> any -> any
-    p.trace = p.curry(function(tag, pipeData) {
+    p.trace = p.curry(function (tag, pipeData) {
       console.log(tag, pipeData);
       return pipeData;
     });
 
     // any -> any
-    p.toJson = function(data) {
+    p.toJson = function (data) {
       return JSON.parse(data);
     };
 
     // Function -> Object -> String -> undefined
-    p.postForm = p.curry(function(cb, data, url) {
+    p.postForm = p.curry(function (cb, data, url) {
       var xhr = new XMLHttpRequest();
       xhr.open("post", url);
-      xhr.onload = function(res) {
+      xhr.onload = function (res) {
         cb.call(res.target, res.target.responseText);
       };
       var formData = new FormData();
@@ -198,10 +157,10 @@ var fnjs = (function() {
     });
 
     // Function -> Object -> String -> undefined
-    p.postRaw = p.curry(function(cb, data, url) {
+    p.postRaw = p.curry(function (cb, data, url) {
       var xhr = new XMLHttpRequest();
       xhr.open("post", url);
-      xhr.onload = function(res) {
+      xhr.onload = function (res) {
         cb.call(res.target, res.target.responseText);
       };
       xhr.setRequestHeader("Content-Type", "json");
@@ -209,7 +168,7 @@ var fnjs = (function() {
     });
 
     // Function -> Array -> Array
-    p.filter = p.curry(function(fn, datas) {
+    p.filter = p.curry(function (fn, datas) {
       if (p.type(datas) === "array") {
         return datas.filter(fn);
       } else {
@@ -218,7 +177,7 @@ var fnjs = (function() {
     });
 
     // (String | Date, String) -> Object
-    p.time = function(date, format) {
+    p.time = function (date, format) {
       this.date = date ? new Date(date) : new Date();
       this.value = "";
       if (!format) return this;
@@ -239,24 +198,24 @@ var fnjs = (function() {
       return this;
     };
 
-    p.split = p.curry(function(p, data) {
+    p.split = p.curry(function (p, data) {
       return data.split(p);
     });
 
     // (String | Date, String) -> Object
-    p.moment = function(date, format) {
+    p.moment = function (date, format) {
       return new p.time(date, format);
     };
 
     // time 实例
-    (function(p) {
+    (function (p) {
       "use strict";
       // undefined -> Boolean
-      p.isValid = function() {
+      p.isValid = function () {
         return Number.isFinite(this.date.getTime());
       };
       // (a, b) -> c
-      p.diff = function(an, format) {
+      p.diff = function (an, format) {
         if (!an.date) return false;
         switch (format) {
           case "years":
@@ -268,12 +227,12 @@ var fnjs = (function() {
     })((p.time.prototype = p.time.prototype || {}));
 
     // a -> b
-    p.Container = function(d) {
+    p.Container = function (d) {
       this.__value = d ? d : null;
     };
 
     // (any -> any) -> (any -> any) -> a
-    p.whenNull = p.curry(function(execute, forbiden, o) {
+    p.whenNull = p.curry(function (execute, forbiden, o) {
       var isnull = true;
       for (var i in o) {
         isnull = false;
@@ -283,12 +242,12 @@ var fnjs = (function() {
     });
 
     // a -> b
-    p.Container.of = function(d) {
+    p.Container.of = function (d) {
       return new p.Container(d);
     };
 
     // (a -> a) -> (a -> b) -> c -> a
-    p.either = p.curry(function(f, g, e) {
+    p.either = p.curry(function (f, g, e) {
       switch (e.constructor) {
         case p.Container:
           return g(e.__value);
@@ -298,12 +257,12 @@ var fnjs = (function() {
     });
 
     // a -> a
-    p.id = function(x) {
+    p.id = function (x) {
       return x;
     };
 
     // [a] | a -> a
-    p.head = function(a) {
+    p.head = function (a) {
       try {
         return a[0] ? a[0] : a;
       } catch (err) {
@@ -312,14 +271,14 @@ var fnjs = (function() {
     };
 
     // a -> Functor: b
-    p.query = function(selector) {
-      return new p.IO(function() {
+    p.query = function (selector) {
+      return new p.IO(function () {
         return document.querySelectorAll(selector);
       });
     };
 
     // [a] | a -> a
-    p.second = function(a) {
+    p.second = function (a) {
       try {
         return a[1] ? a[1] : a;
       } catch (e) {
@@ -328,7 +287,7 @@ var fnjs = (function() {
     };
 
     // a -> b -> c -> a
-    p.addEvent = p.curry(function(callback, type, el) {
+    p.addEvent = p.curry(function (callback, type, el) {
       if (el.length && Array.from(el).length) {
         for (var i = 0; i < el.length; i++) {
           var item = el[i];
@@ -341,31 +300,31 @@ var fnjs = (function() {
     });
 
     // Functor: a -> b
-    p.IoValue = function(io) {
+    p.IoValue = function (io) {
       return io.unsafePerform();
     };
 
     // a => b
-    p.IO = function(f) {
+    p.IO = function (f) {
       this.unsafePerform = f;
     };
 
     // a -> Functor: b
-    p.IO.of = function(x) {
-      return new p.IO(function() {
+    p.IO.of = function (x) {
+      return new p.IO(function () {
         return x;
       });
     };
 
     // Container 实例方法
-    (function(p) {
+    (function (p) {
       "use strict";
       // undefined -> a
-      p.isNothing = function() {
+      p.isNothing = function () {
         return this.__value === null || this.__value === undefined;
       };
       // (a -> b) -> c
-      p.map = function(f) {
+      p.map = function (f) {
         return this.isNothing()
           ? this.constructor.of(null)
           : this.constructor.of(f(this.__value));
@@ -373,9 +332,9 @@ var fnjs = (function() {
     })((p.Container.prototype = p.Container.prototype || {}));
 
     // IO 实例方法
-    (function(p1, p) {
+    (function (p1, p) {
       "use strict";
-      p1.map = function(f) {
+      p1.map = function (f) {
         return new p.IO(
           p.compose(
             f,
@@ -386,34 +345,34 @@ var fnjs = (function() {
     })((p.IO.prototype = p.IO.prototype || {}), p);
 
     // a -> b
-    p.Message = function(d) {
+    p.Message = function (d) {
       this.__value = d ? d : null;
     };
 
     // a -> b
-    p.Message.of = function(d) {
+    p.Message.of = function (d) {
       return new p.Message(d);
     };
 
     // Message 实例方法
-    (function(p) {
+    (function (p) {
       "use strict";
       // (a -> b) -> c
-      p.map = function(f) {
+      p.map = function (f) {
         return this;
       };
     })((p.Message.prototype = p.Message.prototype || {}));
 
     // basic event bus: a -> undefined
-    p.bus = function() {
+    p.bus = function () {
       this.maps = {};
     };
 
     // (any -> any) -> b -> (any -> any)
-    p.throttle = function(f, context) {
+    p.throttle = function (f, context) {
       var t = 30;
       var l = new Date((new Date()).getTime() - t);
-      return function() {
+      return function () {
         var partial = null;
         if ((l.getTime() + t) > (new Date()).getTime()) return false;
         l = new Date();
@@ -423,14 +382,14 @@ var fnjs = (function() {
     }
 
     // (any -> any) -> c -> any
-    p.__ap = p.curry(function(f, c) {
+    p.__ap = p.curry(function (f, c) {
       return f.apply(f, c);
     });
 
     // string -> array
-    p.props = function(selector) {
+    p.props = function (selector) {
       var res = [];
-      for(var i in selector) {
+      for (var i in selector) {
         res.push(i);
       }
       return res;
@@ -440,7 +399,7 @@ var fnjs = (function() {
     p.getEventLists = function (selector) {
       var el = document.querySelector(selector);
       return p.props(el).filter(item => /^on/.test(item)).map(item => {
-        if(typeof el[item] === 'function') {
+        if (typeof el[item] === 'function') {
           return {
             type: item.slice(2),
             funcStr: el[item].toString(),
@@ -451,8 +410,8 @@ var fnjs = (function() {
     }
 
     // string -> undefined
-    p.print = function(selector) {
-      if(!selector) return false;
+    p.print = function (selector) {
+      if (!selector) return false;
       var mp = new Map();
 
       var printContents = document.querySelector(selector).innerHTML;
@@ -472,57 +431,57 @@ var fnjs = (function() {
       })
     }
 
-    // basic event bus 实例方法
-    (function(bus) {
-      "use strict";
-      bus.on = p.curry(function(type, fn) {
-        this.maps[type]
-          ? this.maps[type].push(fn)
-          : ((this.maps[type] = []), this.maps[type].push(fn));
-      })
-      bus.emit = function(type, data) {
-        this.maps[type] && this.__emit(type, data ? data : null);
-      }
-      bus.all = function() {
-        var args = Array.from(arguments);
-        var eventTypes = args.slice(0, -1);
-        var fn = args.slice(-1)[0];
-        if(!eventTypes.length || !fn) return false;
-        fn.eventTypes = eventTypes;
-        fn.scope = {};
-        fn.bindTypes = [].concat(eventTypes);
-        for(var i = 0; i < eventTypes.length; i++) {
-          this.on(eventTypes[i], fn)
+      // basic event bus 实例方法
+      (function (bus) {
+        "use strict";
+        bus.on = p.curry(function (type, fn) {
+          this.maps[type]
+            ? this.maps[type].push(fn)
+            : ((this.maps[type] = []), this.maps[type].push(fn));
+        })
+        bus.emit = function (type, data) {
+          this.maps[type] && this.__emit(type, data ? data : null);
         }
-      }
-      bus.off = function (type) {
-        this.maps[type] ? this.maps[type] = [] : null;
-      }
-      bus.__emit = function(type, data) {
-        for (var i = 0; i < this.maps[type].length; i++) {
-          var fn = this.maps[type][i];
-          if(fn.eventTypes) {
-            var list = [];
-            if(fn.eventTypes.length && fn.eventTypes.indexOf(type) !== -1) {
-              fn.scope[type] = data;
-              fn.eventTypes.splice(fn.eventTypes.indexOf(type), 1);
-              if(fn.eventTypes.length)  continue;
-            } else if(fn.eventTypes.length && fn.eventTypes.indexOf(type) === -1) {
-              continue;
-            }
-            if(fn.bindTypes.indexOf(type) !== -1) {
-              fn.scope[type] = data;
-            }
-            for(var i = 0; i < fn.bindTypes.length; i++) {
-              list.push(fn.scope[fn.bindTypes[i]]);
-            }
-            fn.apply(null, list);
-          } else {
-            fn(data);
+        bus.all = function () {
+          var args = Array.from(arguments);
+          var eventTypes = args.slice(0, -1);
+          var fn = args.slice(-1)[0];
+          if (!eventTypes.length || !fn) return false;
+          fn.eventTypes = eventTypes;
+          fn.scope = {};
+          fn.bindTypes = [].concat(eventTypes);
+          for (var i = 0; i < eventTypes.length; i++) {
+            this.on(eventTypes[i], fn)
           }
         }
-      };
-    })((p.bus.prototype = p.bus.prototype || {}));
+        bus.off = function (type) {
+          this.maps[type] ? this.maps[type] = [] : null;
+        }
+        bus.__emit = function (type, data) {
+          for (var i = 0; i < this.maps[type].length; i++) {
+            var fn = this.maps[type][i];
+            if (fn.eventTypes) {
+              var list = [];
+              if (fn.eventTypes.length && fn.eventTypes.indexOf(type) !== -1) {
+                fn.scope[type] = data;
+                fn.eventTypes.splice(fn.eventTypes.indexOf(type), 1);
+                if (fn.eventTypes.length) continue;
+              } else if (fn.eventTypes.length && fn.eventTypes.indexOf(type) === -1) {
+                continue;
+              }
+              if (fn.bindTypes.indexOf(type) !== -1) {
+                fn.scope[type] = data;
+              }
+              for (var i = 0; i < fn.bindTypes.length; i++) {
+                list.push(fn.scope[fn.bindTypes[i]]);
+              }
+              fn.apply(null, list);
+            } else {
+              fn(data);
+            }
+          }
+        };
+      })((p.bus.prototype = p.bus.prototype || {}));
 
   })((fnjs.prototype = fnjs.prototype || {}));
 
@@ -558,7 +517,7 @@ console.log(
     .map(item => item + 1)
 );
 
-var getAge = curry(function(now, user) {
+var getAge = curry(function (now, user) {
   var birthdate = moment(user.birthdate, "YYYY-MM-DD");
   if (!birthdate.isValid()) {
     return Message.of("birthdate could not be parse");
@@ -591,7 +550,7 @@ ap1({ birthdate: "2000-01-01" })
 var ioObj = IO.of({ name: { name: { name: "n,a,m,e" } } });
 
 var ress = ioObj
-  .map(function(o) {
+  .map(function (o) {
     return o.name;
   })
   .map(prop("name"))
@@ -602,19 +561,19 @@ console.log(ress.unsafePerform());
 
 var bus = new fnjs.bus();
 
-bus.all('name', 'age', 'other', function(a, b, c) {
+bus.all('name', 'age', 'other', function (a, b, c) {
   console.log(a, b, c);
 })
 
-setTimeout(function() {
+setTimeout(function () {
   bus.emit('name', 'jesime');
 }, 1000);
-setTimeout(function() {
+setTimeout(function () {
   bus.emit('age', 30);
 }, 2000);
-setTimeout(function() {
+setTimeout(function () {
   bus.emit('other', 'none');
 }, 3000);
-setTimeout(function() {
+setTimeout(function () {
   bus.emit('other', 'none should be null');
 }, 4000);
