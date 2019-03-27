@@ -40,7 +40,7 @@ var fnjs = (function () {
      * @param {Function} fn 被柯理化的函数
      */
     p.curry = fn => function curryStack(...args) {
-      return args.length >= fn.length ? fn(...args) : (i) => curryStack(...[...args, a]);
+      return args.length >= fn.length ? fn(...args) : (i) => curryStack(...[...args, i]);
     }
     /**
      * 将多个函数组合起来
